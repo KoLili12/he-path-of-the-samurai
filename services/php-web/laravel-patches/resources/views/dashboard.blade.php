@@ -243,24 +243,44 @@ document.addEventListener('DOMContentLoaded', async function () {
         const body = document.getElementById('astroBody');
         const raw  = document.getElementById('astroRaw');
 
-        function normalize(node){
-          const name = node.name || node.body || node.object || node.target || '';
-          const type = node.type || node.event_type || node.category || node.kind || '';
-          const when = node.time || node.date || node.occursAt || node.peak || node.instant || '';
-          const extra = node.magnitude || node.mag || node.altitude || node.note || '';
-          return {name, type, when, extra};
-        }
-
         function collect(root){
           const rows = [];
-          (function dfs(x){
-            if (!x || typeof x !== 'object') return;
-            if (Array.isArray(x)) { x.forEach(dfs); return; }
-            if ((x.type || x.event_type || x.category) && (x.name || x.body || x.object || x.target)) {
-              rows.push(normalize(x));
-            }
-            Object.values(x).forEach(dfs);
-          })(root);
+
+          // Parse AstronomyAPI response structure
+          if (root.data && root.data.table && root.data.table.rows) {
+            root.data.table.rows.forEach(row => {
+              const bodyName = row.entry?.name || row.entry?.id || 'Unknown';
+
+              if (row.cells && Array.isArray(row.cells)) {
+                row.cells.forEach(cell => {
+                  const type = cell.type || 'unknown';
+                  const when = cell.eventHighlights?.peak?.date ||
+                               cell.eventHighlights?.partialStart?.date ||
+                               cell.date ||
+                               cell.time || '';
+
+                  const extraParts = [];
+                  if (cell.extraInfo?.obscuration) {
+                    extraParts.push(`Затемнение: ${(cell.extraInfo.obscuration * 100).toFixed(0)}%`);
+                  }
+                  if (cell.eventHighlights?.partialStart?.date) {
+                    extraParts.push(`Начало: ${new Date(cell.eventHighlights.partialStart.date).toLocaleTimeString('ru-RU')}`);
+                  }
+                  if (cell.eventHighlights?.partialEnd?.date) {
+                    extraParts.push(`Конец: ${new Date(cell.eventHighlights.partialEnd.date).toLocaleTimeString('ru-RU')}`);
+                  }
+
+                  rows.push({
+                    name: bodyName,
+                    type: type,
+                    when: when,
+                    extra: extraParts.join(', ')
+                  });
+                });
+              }
+            });
+          }
+
           return rows;
         }
 
