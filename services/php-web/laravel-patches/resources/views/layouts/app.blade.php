@@ -9,6 +9,9 @@
   <style>#map{height:340px}</style>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  {{-- Modern animations and styling --}}
+  @include('layouts.animations')
 </head>
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary mb-3">
