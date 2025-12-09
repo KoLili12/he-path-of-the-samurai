@@ -10,8 +10,8 @@ class AstroController extends Controller
     {
         $lat  = (float) $r->query('lat', 55.7558);
         $lon  = (float) $r->query('lon', 37.6176);
-        $days = max(1, min(30, (int) $r->query('days', 7)));
-        $body = $r->query('body', 'moon'); // Default to moon events
+        $days = max(1, min(365, (int) $r->query('days', 365))); // Allow up to 1 year ahead
+        $body = $r->query('body', 'sun'); // Default to sun events (eclipses, etc)
 
         $from = now('UTC')->toDateString();
         $to   = now('UTC')->addDays($days)->toDateString();
