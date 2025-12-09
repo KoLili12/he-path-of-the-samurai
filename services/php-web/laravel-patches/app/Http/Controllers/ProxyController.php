@@ -13,8 +13,36 @@ class ProxyController extends Controller
     public function last()  { return $this->pipe('/last'); }
 
     public function trend() {
-        $q = request()->getQueryString();
-        return $this->pipe('/iss/trend' . ($q ? '?' . $q : ''));
+        $limit = (int) request()->get('limit', 240);
+        $limit = max(1, min($limit, 1000)); // Limit between 1 and 1000
+
+        try {
+            $rows = \DB::select("
+                SELECT
+                    fetched_at,
+                    payload->>'latitude' as lat,
+                    payload->>'longitude' as lon,
+                    (payload->>'velocity')::numeric as velocity,
+                    (payload->>'altitude')::numeric as altitude
+                FROM iss_fetch_log
+                ORDER BY fetched_at DESC
+                LIMIT ?
+            ", [$limit]);
+
+            $points = array_map(function($row) {
+                return [
+                    'at' => $row->fetched_at,
+                    'lat' => (float)$row->lat,
+                    'lon' => (float)$row->lon,
+                    'velocity' => (float)$row->velocity,
+                    'altitude' => (float)$row->altitude,
+                ];
+            }, array_reverse($rows)); // Reverse to get chronological order
+
+            return response()->json(['points' => $points]);
+        } catch (\Throwable $e) {
+            return response()->json(['points' => [], 'error' => $e->getMessage()]);
+        }
     }
 
     private function pipe(string $path)
