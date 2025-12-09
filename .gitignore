@@ -1,0 +1,112 @@
+# Environment variables (contains credentials!)
+.env
+.env.local
+.env.*.local
+
+# Claude Code
+.claude/
+
+# Documentation (if temporary)
+docs/
+
+# Docker volumes data
+data/
+csvdata/
+pgdata/
+appdata/
+redisdata/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# PHP/Laravel
+vendor/
+composer.lock
+storage/
+bootstrap/cache/
+.phpunit.result.cache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Redis
+dump.rdb
+
+# Certificates
+*.pem
+*.key
+*.crt
+*.cer
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
