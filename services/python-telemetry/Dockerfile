@@ -12,8 +12,10 @@ COPY telemetry_generator.py .
 # Make script executable
 RUN chmod +x telemetry_generator.py
 
-# Run as non-root user
-RUN useradd -m -u 1000 telemetry && chown -R telemetry:telemetry /app
+# Create data directory and set up non-root user
+RUN mkdir -p /data/csv && \
+    useradd -m -u 1000 telemetry && \
+    chown -R telemetry:telemetry /app /data/csv
 USER telemetry
 
 # Health check
