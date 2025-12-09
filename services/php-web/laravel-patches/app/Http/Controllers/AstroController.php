@@ -11,6 +11,7 @@ class AstroController extends Controller
         $lat  = (float) $r->query('lat', 55.7558);
         $lon  = (float) $r->query('lon', 37.6176);
         $days = max(1, min(30, (int) $r->query('days', 7)));
+        $body = $r->query('body', 'moon'); // Default to moon events
 
         $from = now('UTC')->toDateString();
         $to   = now('UTC')->addDays($days)->toDateString();
@@ -22,11 +23,13 @@ class AstroController extends Controller
         }
 
         $auth = base64_encode($appId . ':' . $secret);
-        $url  = 'https://api.astronomyapi.com/api/v2/bodies/events?' . http_build_query([
+        $url  = 'https://api.astronomyapi.com/api/v2/bodies/events/' . $body . '?' . http_build_query([
             'latitude'  => $lat,
             'longitude' => $lon,
-            'from'      => $from,
-            'to'        => $to,
+            'from_date' => $from,
+            'to_date'   => $to,
+            'elevation' => 0,
+            'time'      => '00:00:00',
         ]);
 
         $ch = curl_init($url);
