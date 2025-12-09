@@ -5,6 +5,7 @@ volumes:
   pgdata:
   appdata:
   csvdata:
+  redisdata:
 
 services:
   db:
@@ -27,6 +28,22 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis_cache
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redisdata:/data
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+
   rust_iss:
     build:
       context: ./services/rust-iss
@@ -39,6 +56,8 @@ services:
       WHERE_ISS_URL: ${WHERE_ISS_URL:-https://api.wheretheiss.at/v1/satellites/25544}
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - backend
@@ -65,8 +84,16 @@ services:
       DB_DATABASE: monolith
       DB_USERNAME: monouser
       DB_PASSWORD: monopass
+      # Redis configuration
+      CACHE_DRIVER: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: null
+      REDIS_DB: 0
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       rust_iss:
         condition: service_started
