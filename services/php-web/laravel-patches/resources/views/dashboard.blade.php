@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <input type="number" step="0.0001" class="form-control form-control-sm" name="lon" value="37.6176" placeholder="lon">
               </div>
               <div class="col-auto">
-                <input type="number" min="1" max="30" class="form-control form-control-sm" name="days" value="7" style="width:90px" title="дней">
+                <input type="number" min="1" max="365" class="form-control form-control-sm" name="days" value="365" style="width:90px" title="дней (до года вперёд)">
               </div>
               <div class="col-auto">
                 <button class="btn btn-sm btn-primary" type="submit">Показать</button>
@@ -319,22 +319,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   </div>
 </div>
 
-{{-- ===== CMS-блок из БД (нарочно сырая вставка) ===== --}}
-<div class="card mt-3">
-  <div class="card-header fw-semibold">CMS — блок из БД</div>
-  <div class="card-body">
-    @php
-      try {
-        // «плохо»: запрос из Blade, без кэша, без репозитория
-        $___b = DB::selectOne("SELECT content FROM cms_blocks WHERE slug='dashboard_experiment' AND is_active = TRUE LIMIT 1");
-        echo $___b ? $___b->content : '<div class="text-muted">блок не найден</div>';
-      } catch (\Throwable $e) {
-        echo '<div class="text-danger">ошибка БД: '.e($e->getMessage()).'</div>';
-      }
-    @endphp
-  </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.L && window._issMapTileLayer) {
@@ -351,19 +335,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
-
-{{-- ===== CMS-блок из БД (нарочно сырая вставка) ===== --}}
-<div class="card mt-3">
-  <div class="card-header fw-semibold">CMS — блок из БД</div>
-  <div class="card-body">
-    @php
-      try {
-        // «плохо»: запрос из Blade, без кэша, без репозитория
-        $___b = DB::selectOne("SELECT content FROM cms_blocks WHERE slug='dashboard_experiment' AND is_active = TRUE LIMIT 1");
-        echo $___b ? $___b->content : '<div class="text-muted">блок не найден</div>';
-      } catch (\Throwable $e) {
-        echo '<div class="text-danger">ошибка БД: '.e($e->getMessage()).'</div>';
-      }
-    @endphp
-  </div>
-</div>
