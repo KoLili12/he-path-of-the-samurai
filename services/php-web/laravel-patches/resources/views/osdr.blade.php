@@ -5,6 +5,17 @@
   <h3 class="mb-3">NASA OSDR</h3>
   <div class="small text-muted mb-2">Источник {{ $src }}</div>
 
+  {{-- Pagination Controls --}}
+  <div class="mb-3">
+    <div class="btn-group btn-group-sm" role="group">
+      <a href="?limit=1" class="btn btn-outline-primary {{ ($limit ?? 1) == 1 ? 'active' : '' }}">1 запись (~571 датасетов)</a>
+      <a href="?limit=2" class="btn btn-outline-primary {{ ($limit ?? 1) == 2 ? 'active' : '' }}">2 записи</a>
+      <a href="?limit=5" class="btn btn-outline-primary {{ ($limit ?? 1) == 5 ? 'active' : '' }}">5 записей</a>
+      <a href="?limit=10" class="btn btn-outline-primary {{ ($limit ?? 1) == 10 ? 'active' : '' }}">10 записей</a>
+    </div>
+    <span class="text-muted ms-3 small">⚠️ Каждая запись содержит ~571 датасетов</span>
+  </div>
+
   <div class="table-responsive">
     <table class="table table-sm table-striped align-middle">
       <thead>

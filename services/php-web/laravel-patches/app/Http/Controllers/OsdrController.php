@@ -8,18 +8,22 @@ class OsdrController extends Controller
 {
     public function index(Request $request)
     {
-        $limit = $request->query('limit', '20'); // учебная нестрогая валидация
+        $limit = $request->query('limit', '1'); // уменьшен с 20 до 1 для производительности
         $base  = getenv('RUST_BASE') ?: 'http://rust_iss:3000';
 
-        $json  = @file_get_contents($base.'/osdr/list?limit='.$limit);
-        $data  = $json ? json_decode($json, true) : ['items' => []];
-        $items = $data['items'] ?? [];
-
-        $items = $this->flattenOsdr($items); // ключевая строка
+        // Кеш на 5 минут для уменьшения нагрузки
+        $cacheKey = "osdr_list_{$limit}";
+        $items = cache()->remember($cacheKey, 300, function() use ($base, $limit) {
+            $json  = @file_get_contents($base.'/osdr/list?limit='.$limit);
+            $data  = $json ? json_decode($json, true) : ['items' => []];
+            $rawItems = $data['items'] ?? [];
+            return $this->flattenOsdr($rawItems);
+        });
 
         return view('osdr', [
             'items' => $items,
             'src'   => $base.'/osdr/list?limit='.$limit,
+            'limit' => $limit,
         ]);
     }
 
