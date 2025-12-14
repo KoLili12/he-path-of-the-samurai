@@ -2,13 +2,17 @@
 
 @section('content')
 <div class="container py-4">
-  <h3 class="mb-3">МКС данные</h3>
+  <h2 class="mb-4">
+    <span class="text-primary">ISS</span> Данные и История
+  </h2>
 
   <div class="row g-3 mb-4">
     <div class="col-md-6">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-primary text-white">
+          <h5 class="m-0">📍 Последний снимок</h5>
+        </div>
         <div class="card-body">
-          <h5 class="card-title">Последний снимок</h5>
           @if(!empty($last['payload']))
             <ul class="list-group">
               <li class="list-group-item">Широта {{ $last['payload']['latitude'] ?? '—' }}</li>
@@ -20,15 +24,19 @@
           @else
             <div class="text-muted">нет данных</div>
           @endif
-          <div class="mt-3"><code>{{ $base }}/last</code></div>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">API: <code>{{ $base }}/last</code></small>
         </div>
       </div>
     </div>
 
     <div class="col-md-6">
-      <div class="card shadow-sm">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-success text-white">
+          <h5 class="m-0">📊 Тренд движения</h5>
+        </div>
         <div class="card-body">
-          <h5 class="card-title">Тренд движения</h5>
           @if(!empty($trend))
             <ul class="list-group">
               <li class="list-group-item">Движение {{ ($trend['movement'] ?? false) ? 'да' : 'нет' }}</li>
@@ -39,7 +47,9 @@
           @else
             <div class="text-muted">нет данных</div>
           @endif
-          <div class="mt-3"><code>{{ $base }}/iss/trend</code></div>
+        </div>
+        <div class="card-footer bg-light">
+          <small class="text-muted">API: <code>{{ $base }}/iss/trend</code></small>
         </div>
       </div>
     </div>
@@ -47,8 +57,10 @@
 
   {{-- История МКС --}}
   <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <h5 class="m-0">📜 История позиций МКС</h5>
+    </div>
     <div class="card-body">
-      <h5 class="card-title mb-3">История позиций МКС</h5>
 
       {{-- Search and Pagination --}}
       <div class="row g-3 mb-3">

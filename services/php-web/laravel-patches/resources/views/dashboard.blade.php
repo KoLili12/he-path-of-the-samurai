@@ -97,26 +97,83 @@
       </div>
     </div>
   </div>
-</div>
+
+  {{-- ASTRO — события --}}
+  <div class="col-12 mt-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2 mb-3">
+          <h5 class="card-title m-0">Астрономические события (AstronomyAPI)</h5>
+          <form id="astroForm" class="d-flex flex-wrap gap-2 align-items-center">
+            <input type="number" step="0.0001" class="form-control form-control-sm" name="lat" value="55.7558" placeholder="Широта" style="width:110px">
+            <input type="number" step="0.0001" class="form-control form-control-sm" name="lon" value="37.6176" placeholder="Долгота" style="width:110px">
+            <input type="number" min="1" max="365" class="form-control form-control-sm" name="days" value="365" style="width:90px" title="дней (до года вперёд)" placeholder="Дней">
+            <button class="btn btn-sm btn-primary" type="submit">Показать</button>
+          </form>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+              <tr><th>#</th><th>Тело</th><th>Событие</th><th>Когда (UTC)</th><th>Дополнительно</th></tr>
+            </thead>
+            <tbody id="astroBody">
+              <tr><td colspan="5" class="text-muted text-center">нет данных</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <details class="mt-2">
+          <summary class="text-muted small" style="cursor:pointer">Полный JSON</summary>
+          <pre id="astroRaw" class="bg-light rounded p-2 small m-0 mt-2" style="white-space:pre-wrap"></pre>
+        </details>
+      </div>
+    </div>
+  </div>
+
+  {{-- CMS блок --}}
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-light">
+        <h6 class="m-0">CMS — Динамический контент</h6>
+      </div>
+      <div class="card-body">
+        @php
+          try {
+            $___b = DB::selectOne("SELECT content FROM cms_blocks WHERE slug='dashboard_experiment' AND is_active = TRUE LIMIT 1");
+            echo $___b ? $___b->content : '<div class="text-muted">блок не найден</div>';
+          } catch (\Throwable $e) {
+            echo '<div class="text-danger">ошибка БД: '.e($e->getMessage()).'</div>';
+          }
+        @endphp
+      </div>
+    </div>
+  </div>
+  </div>{{-- закрываем row g-3 --}}
+</div>{{-- закрываем container --}}
 
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
-  // ====== карта и графики МКС (как раньше) ======
+  // ====== карта и графики МКС ======
   if (typeof L !== 'undefined' && typeof Chart !== 'undefined') {
     const last = @json(($iss['payload'] ?? []));
     let lat0 = Number(last.latitude || 0), lon0 = Number(last.longitude || 0);
     const map = L.map('map', { attributionControl:false }).setView([lat0||0, lon0||0], lat0?3:2);
-    L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', { noWrap:true }).addTo(map);
+    window._issMap = map;
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', { noWrap:true });
+    tileLayer.addTo(map);
+    window._issMapTileLayer = tileLayer;
+
     const trail  = L.polyline([], {weight:3}).addTo(map);
     const marker = L.marker([lat0||0, lon0||0]).addTo(map).bindPopup('МКС');
 
     const speedChart = new Chart(document.getElementById('issSpeedChart'), {
       type: 'line', data: { labels: [], datasets: [{ label: 'Скорость', data: [] }] },
-      options: { responsive: true, scales: { x: { display: false } } }
+      options: { responsive: true, maintainAspectRatio: true, scales: { x: { display: false } } }
     });
     const altChart = new Chart(document.getElementById('issAltChart'), {
       type: 'line', data: { labels: [], datasets: [{ label: 'Высота', data: [] }] },
-      options: { responsive: true, scales: { x: { display: false } } }
+      options: { responsive: true, maintainAspectRatio: true, scales: { x: { display: false } } }
     });
 
     async function loadTrend() {
@@ -139,6 +196,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
     loadTrend();
     setInterval(loadTrend, 15000);
+
+    // Map tile error handler
+    tileLayer.on('tileerror', () => {
+      try {
+        map.removeLayer(tileLayer);
+      } catch(e) {}
+      const newTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: ''});
+      newTileLayer.addTo(map);
+      window._issMapTileLayer = newTileLayer;
+    });
   }
 
   // ====== JWST ГАЛЕРЕЯ ======
@@ -192,166 +259,84 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   // стартовые данные
   loadFeed({source:'jpg', perPage:24});
+
+  // ====== ASTRO СОБЫТИЯ ======
+  const astroForm = document.getElementById('astroForm');
+  const astroBody = document.getElementById('astroBody');
+  const astroRaw  = document.getElementById('astroRaw');
+
+  function collectAstroEvents(root){
+    const rows = [];
+    if (root.data && root.data.table && root.data.table.rows) {
+      root.data.table.rows.forEach(row => {
+        const bodyName = row.entry?.name || row.entry?.id || 'Unknown';
+        if (row.cells && Array.isArray(row.cells)) {
+          row.cells.forEach(cell => {
+            const type = cell.type || 'unknown';
+            const when = cell.eventHighlights?.peak?.date ||
+                         cell.eventHighlights?.partialStart?.date ||
+                         cell.date ||
+                         cell.time || '';
+
+            const extraParts = [];
+            if (cell.extraInfo?.obscuration) {
+              extraParts.push(`Затемнение: ${(cell.extraInfo.obscuration * 100).toFixed(0)}%`);
+            }
+            if (cell.eventHighlights?.partialStart?.date) {
+              extraParts.push(`Начало: ${new Date(cell.eventHighlights.partialStart.date).toLocaleTimeString('ru-RU')}`);
+            }
+            if (cell.eventHighlights?.partialEnd?.date) {
+              extraParts.push(`Конец: ${new Date(cell.eventHighlights.partialEnd.date).toLocaleTimeString('ru-RU')}`);
+            }
+
+            rows.push({
+              name: bodyName,
+              type: type,
+              when: when,
+              extra: extraParts.join(', ')
+            });
+          });
+        }
+      });
+    }
+    return rows;
+  }
+
+  async function loadAstroEvents(q){
+    astroBody.innerHTML = '<tr><td colspan="5" class="text-muted text-center">Загрузка…</td></tr>';
+    const url = '/api/astro/events?' + new URLSearchParams(q).toString();
+    try{
+      const r  = await fetch(url);
+      const js = await r.json();
+      astroRaw.textContent = JSON.stringify(js, null, 2);
+
+      const rows = collectAstroEvents(js);
+      if (!rows.length) {
+        astroBody.innerHTML = '<tr><td colspan="5" class="text-muted text-center">события не найдены</td></tr>';
+        return;
+      }
+      astroBody.innerHTML = rows.slice(0,200).map((r,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td>${r.name || '—'}</td>
+          <td>${r.type || '—'}</td>
+          <td><code class="small">${r.when || '—'}</code></td>
+          <td class="small">${r.extra || ''}</td>
+        </tr>
+      `).join('');
+    }catch(e){
+      astroBody.innerHTML = '<tr><td colspan="5" class="text-danger text-center">ошибка загрузки</td></tr>';
+    }
+  }
+
+  astroForm.addEventListener('submit', ev=>{
+    ev.preventDefault();
+    const q = Object.fromEntries(new FormData(astroForm).entries());
+    loadAstroEvents(q);
+  });
+
+  // автозагрузка
+  loadAstroEvents({lat: astroForm.lat.value, lon: astroForm.lon.value, days: astroForm.days.value});
 });
 </script>
 @endsection
-
-    <!-- ASTRO — события -->
-    <div class="col-12 order-first mt-3">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="card-title m-0">Астрономические события (AstronomyAPI)</h5>
-            <form id="astroForm" class="row g-2 align-items-center">
-              <div class="col-auto">
-                <input type="number" step="0.0001" class="form-control form-control-sm" name="lat" value="55.7558" placeholder="lat">
-              </div>
-              <div class="col-auto">
-                <input type="number" step="0.0001" class="form-control form-control-sm" name="lon" value="37.6176" placeholder="lon">
-              </div>
-              <div class="col-auto">
-                <input type="number" min="1" max="365" class="form-control form-control-sm" name="days" value="365" style="width:90px" title="дней (до года вперёд)">
-              </div>
-              <div class="col-auto">
-                <button class="btn btn-sm btn-primary" type="submit">Показать</button>
-              </div>
-            </form>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-sm align-middle">
-              <thead>
-                <tr><th>#</th><th>Тело</th><th>Событие</th><th>Когда (UTC)</th><th>Дополнительно</th></tr>
-              </thead>
-              <tbody id="astroBody">
-                <tr><td colspan="5" class="text-muted">нет данных</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <details class="mt-2">
-            <summary>Полный JSON</summary>
-            <pre id="astroRaw" class="bg-light rounded p-2 small m-0" style="white-space:pre-wrap"></pre>
-          </details>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('astroForm');
-        const body = document.getElementById('astroBody');
-        const raw  = document.getElementById('astroRaw');
-
-        function collect(root){
-          const rows = [];
-
-          // Parse AstronomyAPI response structure
-          if (root.data && root.data.table && root.data.table.rows) {
-            root.data.table.rows.forEach(row => {
-              const bodyName = row.entry?.name || row.entry?.id || 'Unknown';
-
-              if (row.cells && Array.isArray(row.cells)) {
-                row.cells.forEach(cell => {
-                  const type = cell.type || 'unknown';
-                  const when = cell.eventHighlights?.peak?.date ||
-                               cell.eventHighlights?.partialStart?.date ||
-                               cell.date ||
-                               cell.time || '';
-
-                  const extraParts = [];
-                  if (cell.extraInfo?.obscuration) {
-                    extraParts.push(`Затемнение: ${(cell.extraInfo.obscuration * 100).toFixed(0)}%`);
-                  }
-                  if (cell.eventHighlights?.partialStart?.date) {
-                    extraParts.push(`Начало: ${new Date(cell.eventHighlights.partialStart.date).toLocaleTimeString('ru-RU')}`);
-                  }
-                  if (cell.eventHighlights?.partialEnd?.date) {
-                    extraParts.push(`Конец: ${new Date(cell.eventHighlights.partialEnd.date).toLocaleTimeString('ru-RU')}`);
-                  }
-
-                  rows.push({
-                    name: bodyName,
-                    type: type,
-                    when: when,
-                    extra: extraParts.join(', ')
-                  });
-                });
-              }
-            });
-          }
-
-          return rows;
-        }
-
-        async function load(q){
-          body.innerHTML = '<tr><td colspan="5" class="text-muted">Загрузка…</td></tr>';
-          const url = '/api/astro/events?' + new URLSearchParams(q).toString();
-          try{
-            const r  = await fetch(url);
-            const js = await r.json();
-            raw.textContent = JSON.stringify(js, null, 2);
-
-            const rows = collect(js);
-            if (!rows.length) {
-              body.innerHTML = '<tr><td colspan="5" class="text-muted">события не найдены</td></tr>';
-              return;
-            }
-            body.innerHTML = rows.slice(0,200).map((r,i)=>`
-              <tr>
-                <td>${i+1}</td>
-                <td>${r.name || '—'}</td>
-                <td>${r.type || '—'}</td>
-                <td><code>${r.when || '—'}</code></td>
-                <td>${r.extra || ''}</td>
-              </tr>
-            `).join('');
-          }catch(e){
-            body.innerHTML = '<tr><td colspan="5" class="text-danger">ошибка загрузки</td></tr>';
-          }
-        }
-
-        form.addEventListener('submit', ev=>{
-          ev.preventDefault();
-          const q = Object.fromEntries(new FormData(form).entries());
-          load(q);
-        });
-
-        // автозагрузка
-        load({lat: form.lat.value, lon: form.lon.value, days: form.days.value});
-      });
-    </script>
-
-
-{{-- ===== Данный блок ===== --}}
-<div class="card mt-3">
-  <div class="card-header fw-semibold">CMS</div>
-  <div class="card-body">
-    @php
-      try {
-        // «плохо»: запрос из Blade, без кэша, без репозитория
-        $___b = DB::selectOne("SELECT content FROM cms_blocks WHERE slug='dashboard_experiment' AND is_active = TRUE LIMIT 1");
-        echo $___b ? $___b->content : '<div class="text-muted">блок не найден</div>';
-      } catch (\Throwable $e) {
-        echo '<div class="text-danger">ошибка БД: '.e($e->getMessage()).'</div>';
-      }
-    @endphp
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.L && window._issMapTileLayer) {
-    const map  = window._issMap;
-    let   tl   = window._issMapTileLayer;
-    tl.on('tileerror', () => {
-      try {
-        map.removeLayer(tl);
-      } catch(e) {}
-      tl = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: ''});
-      tl.addTo(map);
-      window._issMapTileLayer = tl;
-    });
-  }
-});
-</script>

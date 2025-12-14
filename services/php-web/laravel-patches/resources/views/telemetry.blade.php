@@ -1,43 +1,49 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-3">
-  <h3 class="mb-3">Телеметрия Legacy</h3>
-  <div class="small text-muted mb-3">
-    CSV/XLSX данные генерируемые Python Telemetry сервисом
-  </div>
+<div class="container py-4">
+  <h2 class="mb-2">
+    <span class="text-primary">Telemetry</span> Legacy
+  </h2>
+  <p class="text-muted mb-4">
+    📊 CSV/XLSX данные генерируемые Python Telemetry сервисом каждые 5 минут
+  </p>
 
   {{-- Статистика --}}
-  <div class="row g-3 mb-3">
-    <div class="col-md-3">
-      <div class="card">
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-primary">
         <div class="card-body text-center">
+          <div class="text-primary fs-3">📦</div>
           <div class="small text-muted">Всего записей</div>
-          <div class="fs-4">{{ number_format($total, 0, '', ' ') }}</div>
+          <div class="fs-4 fw-bold">{{ number_format($total, 0, '', ' ') }}</div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card">
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-info">
         <div class="card-body text-center">
+          <div class="text-info fs-3">👁️</div>
           <div class="small text-muted">Показано</div>
-          <div class="fs-4">{{ count($items) }}</div>
+          <div class="fs-4 fw-bold">{{ count($items) }}</div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card">
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-success">
         <div class="card-body text-center">
+          <div class="text-success fs-3">✅</div>
           <div class="small text-muted">Operational</div>
-          <div class="fs-4 text-success">{{ $items->where('operational', true)->count() }}</div>
+          <div class="fs-4 fw-bold text-success">{{ $items->where('operational', true)->count() }}</div>
         </div>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card">
+    <div class="col-6 col-md-3">
+      <div class="card shadow-sm border-danger">
         <div class="card-body text-center">
+          <div class="text-danger fs-3">❌</div>
           <div class="small text-muted">Offline</div>
-          <div class="fs-4 text-danger">{{ $items->where('operational', false)->count() }}</div>
+          <div class="fs-4 fw-bold text-danger">{{ $items->where('operational', false)->count() }}</div>
         </div>
       </div>
     </div>
@@ -123,10 +129,18 @@
   </div>
 
   {{-- Информация о данных --}}
-  <div class="alert alert-info mt-3">
-    <strong>ℹ️ О данных:</strong> Эти данные генерируются Python Telemetry сервисом каждые 5 минут.
-    CSV и XLSX файлы сохраняются в <code>/data/csv/</code>.
-    Типизация: timestamp, boolean, numeric, text. Используется parameterized SQL для безопасности.
+  <div class="card mt-4 border-info">
+    <div class="card-header bg-info bg-opacity-10 border-info">
+      <h6 class="m-0 text-info">ℹ️ Информация о данных</h6>
+    </div>
+    <div class="card-body">
+      <ul class="mb-0">
+        <li><strong>Источник:</strong> Python Telemetry Generator (генерация каждые 5 минут)</li>
+        <li><strong>Формат:</strong> CSV и XLSX файлы в <code>/data/csv/</code></li>
+        <li><strong>Типы данных:</strong> timestamp, boolean, numeric, text</li>
+        <li><strong>Безопасность:</strong> Parameterized SQL запросы</li>
+      </ul>
+    </div>
   </div>
 </div>
 @endsection

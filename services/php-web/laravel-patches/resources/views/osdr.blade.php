@@ -1,9 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-3">
-  <h3 class="mb-3">NASA OSDR</h3>
-  <div class="small text-muted mb-2">Источник {{ $src }}</div>
+<div class="container py-4">
+  <h2 class="mb-2">
+    <span class="text-primary">NASA</span> OSDR
+  </h2>
+  <p class="text-muted mb-4">
+    🚀 Open Science Data Repository · API: <code>{{ $src }}</code>
+  </p>
 
   {{-- Search and Filter Controls --}}
   <div class="row g-3 mb-3">
@@ -36,11 +40,11 @@
 
   {{-- Display Limit Controls --}}
   <div class="row g-3 mb-3">
-    <div class="col-md-12">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <span class="text-muted small">Показано записей на странице:</span>
-          <div class="btn-group btn-group-sm ms-2" role="group">
+    <div class="col-12">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span class="text-muted small">Показано записей:</span>
+          <div class="btn-group btn-group-sm" role="group">
             <a href="?limit={{ $limit }}&display_limit=5&search={{ $search ?? '' }}" class="btn btn-outline-secondary {{ $displayLimit == 5 ? 'active' : '' }}">5</a>
             <a href="?limit={{ $limit }}&display_limit=10&search={{ $search ?? '' }}" class="btn btn-outline-secondary {{ $displayLimit == 10 ? 'active' : '' }}">10</a>
             <a href="?limit={{ $limit }}&display_limit=25&search={{ $search ?? '' }}" class="btn btn-outline-secondary {{ $displayLimit == 25 ? 'active' : '' }}">25</a>
@@ -48,11 +52,9 @@
             <a href="?limit={{ $limit }}&display_limit=100&search={{ $search ?? '' }}" class="btn btn-outline-secondary {{ $displayLimit == 100 ? 'active' : '' }}">100</a>
           </div>
         </div>
-        <div>
-          <span class="badge bg-info">
-            Отображается {{ count($items) }} из {{ number_format($total, 0, '', ' ') }} записей
-          </span>
-        </div>
+        <span class="badge bg-info text-wrap">
+          Отображается {{ count($items) }} из {{ number_format($total, 0, '', ' ') }} записей
+        </span>
       </div>
     </div>
   </div>
@@ -65,16 +67,16 @@
   @endif
 
   <div class="table-responsive">
-    <table class="table table-sm table-striped align-middle">
-      <thead>
+    <table class="table table-sm table-striped table-hover align-middle">
+      <thead class="table-dark">
         <tr>
           <th>#</th>
-          <th>dataset_id</th>
-          <th>title</th>
-          <th>REST_URL</th>
-          <th>updated_at</th>
-          <th>inserted_at</th>
-          <th>raw</th>
+          <th>Dataset ID</th>
+          <th>Название</th>
+          <th>REST URL</th>
+          <th>Обновлено</th>
+          <th>Добавлено</th>
+          <th>JSON</th>
         </tr>
       </thead>
       <tbody>

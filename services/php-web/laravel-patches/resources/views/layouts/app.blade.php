@@ -14,12 +14,30 @@
   @include('layouts.animations')
 </head>
 <body>
-<nav class="navbar navbar-expand-lg bg-body-tertiary mb-3">
-  <div class="container">
-    <a class="navbar-brand" href="/dashboard">Dashboard</a>
-    <a class="nav-link" href="/iss">ISS</a>
-    <a class="nav-link" href="/osdr">OSDR</a>
-    <a class="nav-link" href="/telemetry">Telemetry</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3 shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand fw-bold" href="/dashboard">
+      <span class="text-primary">Space</span> Dashboard
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link {{ request()->is('dashboard') || request()->is('/') ? 'active' : '' }}" href="/dashboard">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ request()->is('iss') ? 'active' : '' }}" href="/iss">ISS Tracker</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ request()->is('osdr') ? 'active' : '' }}" href="/osdr">NASA OSDR</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ request()->is('telemetry') ? 'active' : '' }}" href="/telemetry">Telemetry</a>
+        </li>
+      </ul>
+    </div>
   </div>
 </nav>
 @yield('content')
