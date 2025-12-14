@@ -10,11 +10,13 @@ class OsdrController extends Controller
     {
         $limit = $request->query('limit', '1'); // уменьшен с 20 до 1 для производительности
         $search = $request->query('search', '');
+        $displayLimit = (int) $request->query('display_limit', 10); // Лимит отображения
+        $displayLimit = min(max($displayLimit, 5), 100); // от 5 до 100
         $base  = getenv('RUST_BASE') ?: 'http://rust_iss:3000';
 
         // Кеш на 5 минут для уменьшения нагрузки
         $cacheKey = "osdr_list_{$limit}";
-        $items = cache()->remember($cacheKey, 300, function() use ($base, $limit) {
+        $allItems = cache()->remember($cacheKey, 300, function() use ($base, $limit) {
             $json  = @file_get_contents($base.'/osdr/list?limit='.$limit);
             $data  = $json ? json_decode($json, true) : ['items' => []];
             $rawItems = $data['items'] ?? [];
@@ -22,6 +24,7 @@ class OsdrController extends Controller
         });
 
         // Фильтрация по поисковому запросу
+        $items = $allItems;
         if ($search) {
             $items = array_filter($items, function($item) use ($search) {
                 $searchLower = mb_strtolower($search);
@@ -32,11 +35,17 @@ class OsdrController extends Controller
             });
         }
 
+        // Ограничиваем количество отображаемых записей для производительности
+        $total = count($items);
+        $items = array_slice($items, 0, $displayLimit);
+
         return view('osdr', [
             'items' => $items,
+            'total' => $total,
             'src'   => $base.'/osdr/list?limit='.$limit,
             'limit' => $limit,
             'search' => $search,
+            'displayLimit' => $displayLimit,
         ]);
     }
 
