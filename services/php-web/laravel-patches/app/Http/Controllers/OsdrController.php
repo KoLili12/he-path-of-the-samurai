@@ -9,6 +9,7 @@ class OsdrController extends Controller
     public function index(Request $request)
     {
         $limit = $request->query('limit', '1'); // уменьшен с 20 до 1 для производительности
+        $search = $request->query('search', '');
         $base  = getenv('RUST_BASE') ?: 'http://rust_iss:3000';
 
         // Кеш на 5 минут для уменьшения нагрузки
@@ -20,10 +21,22 @@ class OsdrController extends Controller
             return $this->flattenOsdr($rawItems);
         });
 
+        // Фильтрация по поисковому запросу
+        if ($search) {
+            $items = array_filter($items, function($item) use ($search) {
+                $searchLower = mb_strtolower($search);
+                $title = mb_strtolower($item['title'] ?? '');
+                $datasetId = mb_strtolower($item['dataset_id'] ?? '');
+
+                return str_contains($title, $searchLower) || str_contains($datasetId, $searchLower);
+            });
+        }
+
         return view('osdr', [
             'items' => $items,
             'src'   => $base.'/osdr/list?limit='.$limit,
             'limit' => $limit,
+            'search' => $search,
         ]);
     }
 

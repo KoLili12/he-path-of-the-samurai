@@ -19,6 +19,7 @@
     <a class="navbar-brand" href="/dashboard">Dashboard</a>
     <a class="nav-link" href="/iss">ISS</a>
     <a class="nav-link" href="/osdr">OSDR</a>
+    <a class="nav-link" href="/telemetry">Telemetry</a>
   </div>
 </nav>
 @yield('content')

@@ -5,9 +5,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn() => redirect('/dashboard'));
 
 // Панели
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
-Route::get('/osdr',      [\App\Http\Controllers\OsdrController::class,      'index']);
-Route::get('/iss',       [\App\Http\Controllers\IssController::class,       'index']);
+Route::get('/dashboard',  [\App\Http\Controllers\DashboardController::class, 'index']);
+Route::get('/osdr',       [\App\Http\Controllers\OsdrController::class,      'index']);
+Route::get('/iss',        [\App\Http\Controllers\IssController::class,       'index']);
+Route::get('/telemetry',  [\App\Http\Controllers\TelemetryController::class, 'index']);
 
 // Прокси к rust_iss
 Route::get('/api/iss/last',  [\App\Http\Controllers\ProxyController::class, 'last']);
